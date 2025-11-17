@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>축제 검색</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .search-form { margin-bottom: 20px; }
+        .festival { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: flex; align-items: center; }
+        .festival img { width: 120px; height: 80px; object-fit: cover; margin-right: 15px; }
+        .festival div { flex: 1; }
+        .festival a { text-decoration: none; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <h1>축제 검색</h1>
+    <form class="search-form" method="POST">
+        <input type="text" name="keyword" placeholder="검색 키워드 입력" value="{{ keyword }}">
+        <button type="submit">검색</button>
+    </form>
+
+    {% if results %}
+        <h2>검색 결과 ({{ results|length }}개)</h2>
+        {% for item in results %}
+            <div class="festival">
+                {% if item.referenceIdentifier %}
+                    <img src="{{ item.referenceIdentifier }}" alt="이미지">
+                {% else %}
+                    <img src="https://via.placeholder.com/120x80?text=No+Image" alt="이미지 없음">
+                {% endif %}
+                <div>
+                    <strong>축제명:</strong> {{ item.title }}<br>
+                    <strong>기간:</strong> {{ item.eventPeriod }}<br>
+                    <strong>장소:</strong> {{ item.spatialCoverage }}<br>
+                    <strong>링크:</strong> <a href="{{ item.url }}" target="_blank">{{ item.url }}</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>검색 결과가 없습니다.</p>
+    {% endif %}
+</body>
+</html>

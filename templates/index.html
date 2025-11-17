@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공연 정보 검색</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>공연 정보 검색</h1>
+        
+        <form action="/" method="get" class="search-box">
+            <label for="date">날짜 선택:</label>
+            <input type="date" id="date" name="date" value="{{ selected_date }}" required>
+            <button type="submit">검색</button>
+        </form>
+
+        <div id="results">
+            {% if selected_date %}
+                {% if performances %}
+                    {% for perf in performances %}
+                    <div class="performance-item">
+                        <a href="/detail/{{ perf.id }}?date={{ selected_date }}">
+                            <img src="{{ perf.poster }}" alt="{{ perf.title }}">
+                            <div class="perf-info">
+                                <h3>{{ perf.title }}</h3>
+                                <p>{{ perf.place }}</p>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-results">해당 날짜에 공연이 없습니다.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
