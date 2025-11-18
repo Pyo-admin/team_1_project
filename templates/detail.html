@@ -1,26 +1,187 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>공연 상세정보</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <a href="/?date={{ date }}" class="back-button">← 목록으로</a>
-        
+    <div class="container" id="captureArea">
+        <a href="/?date={{ date }}" class="back-button" id="backButton">← 목록으로</a>
         <h1>{{ detail.title }}</h1>
-        <img id="poster" src="{{ detail.poster }}" alt="{{ detail.title }}">
-        
+        <!-- proxy_image 라우트 경유해서 이미지 우회 요청 -->
+        <img id="poster" src="/proxy_image?url={{ detail.poster }}" alt="{{ detail.title }}" crossorigin="anonymous" />
         <div class="detail-info">
+            <p><strong>장르:</strong> {{ detail.genre }}</p>
             <p><strong>공연기간:</strong> {{ detail.start_date }} ~ {{ detail.end_date }}</p>
             <p><strong>공연장소:</strong> {{ detail.place }}</p>
-            <p><strong>주소:</strong> {{ detail.address }}</p>
+            <p><strong>주소:</strong> <span id="address-text">{{ detail.address }}</span></p>
             <p><strong>공연시간:</strong> {{ detail.runtime }}</p>
             <p><strong>관람연령:</strong> {{ detail.age }}</p>
+            <p><strong>티켓가격:</strong> {{ detail.price }}</p>
             <p><strong>출연진:</strong> {{ detail.cast }}</p>
         </div>
+
+        <div class="map-section" data-html2canvas-ignore="true">
+            <h3>위치</h3>
+            <div id="map" style="width:100%;height:350px;"></div>
+            <p id="map-status" style="display:none; text-align:center; color:#e74c3c; margin-top:10px; font-size:14px;"></p>
+        </div>
+
+        <div class="share-section" id="shareSection">
+            <h3>공유하기</h3>
+            <div class="share-buttons">
+                <button onclick="captureAndSave()" class="share-btn save-btn" id="saveBtn">💾 페이지 저장</button>
+                <button onclick="shareGoogleMail()" class="share-btn google-btn">G 구글 메일</button>
+            </div>
+        </div>
     </div>
+
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a4f66e6d611ca7253dafc7e524bccae4&libraries=services"></script>
+    <script>
+        const detailData = {
+            id: '{{ detail.id }}',
+            title: '{{ detail.title }}',
+            start_date: '{{ detail.start_date }}',
+            end_date: '{{ detail.end_date }}',
+            place: '{{ detail.place }}',
+            poster: '{{ detail.poster }}',
+            genre: '{{ detail.genre }}',
+            runtime: '{{ detail.runtime }}',
+            age: '{{ detail.age }}',
+            cast: '{{ detail.cast }}',
+            address: '{{ detail.address }}',
+            price: '{{ detail.price }}'
+        };
+
+        // 이메일 공유 함수
+        function shareGoogleMail() {
+            const subject = `[공연 정보] ${detailData.title}`;
+            const body = `
+안녕하세요, 공연 정보를 공유합니다.
+
+[${detailData.title}]
+▶ 포스터 링크: ${detailData.poster}
+
+- 장르: ${detailData.genre}
+- 기간: ${detailData.start_date} ~ ${detailData.end_date}
+- 장소: ${detailData.place}
+- 주소: ${detailData.address}
+- 시간: ${detailData.runtime}
+- 연령: ${detailData.age}
+- 티켓: ${detailData.price}
+- 출연: ${detailData.cast}
+
+*지도 이미지는 포함하지 않고, 주소를 참고해 주세요.*
+
+자세한 내용은 예매 사이트를 참고하세요.
+            `.trim();
+
+            const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(url, '_blank', 'width=800,height=600');
+        }
+
+        // 캡처 및 저장 함수 (지도 영역 제외)
+        async function captureAndSave() {
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.innerHTML;
+
+            try {
+                saveBtn.innerHTML = '💾 저장 중...';
+                saveBtn.disabled = true;
+
+                document.getElementById('shareSection').style.visibility = 'hidden';
+                document.getElementById('backButton').style.visibility = 'hidden';
+
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                const canvas = await html2canvas(document.getElementById('captureArea'), {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: false,
+                    removeContainer: true,
+                    ignoreElements: element => element.hasAttribute('data-html2canvas-ignore')
+                });
+
+                document.getElementById('shareSection').style.visibility = 'visible';
+                document.getElementById('backButton').style.visibility = 'visible';
+
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+
+                const imageData = canvas.toDataURL('image/png', 1.0);
+
+                const response = await fetch('/save_screenshot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        image_data: imageData,
+                        title: detailData.title
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                } else {
+                    alert('저장 실패: ' + result.message);
+                }
+            } catch (err) {
+                alert('오류 발생: ' + err.message);
+                document.getElementById('shareSection').style.visibility = 'visible';
+                document.getElementById('backButton').style.visibility = 'visible';
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // 카카오 지도 설정 및 표시
+        if (typeof kakao === 'undefined') {
+            const statusEl = document.getElementById('map-status');
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<strong style="font-size:16px;">⚠️ 지도를 불러올 수 없습니다</strong><br><span>API 키를 확인해주세요.</span>';
+        } else {
+            const mapContainer = document.getElementById('map');
+            const mapOption = { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 };
+            const map = new kakao.maps.Map(mapContainer, mapOption);
+            const geocoder = new kakao.maps.services.Geocoder();
+
+            let address = '{{ detail.address }}';
+            let placeName = '{{ detail.place }}';
+            let searchKeyword = address && address !== '정보 없음' && address !== 'None' ? address : placeName;
+
+            const statusEl = document.getElementById('map-status');
+            statusEl.style.display = 'block';
+            statusEl.textContent = '위치 검색 중...';
+
+            geocoder.addressSearch(searchKeyword, (result, status) => {
+                if (status === kakao.maps.services.Status.OK) {
+                    const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                    new kakao.maps.Marker({ map, position: coords });
+                    map.setCenter(coords);
+                    statusEl.style.display = 'none';
+                } else {
+                    const ps = new kakao.maps.services.Places();
+                    ps.keywordSearch(searchKeyword, (data, status) => {
+                        if (status === kakao.maps.services.Status.OK) {
+                            const coords = new kakao.maps.LatLng(data[0].y, data[0].x);
+                            new kakao.maps.Marker({ map, position: coords });
+                            map.setCenter(coords);
+                            statusEl.style.display = 'none';
+                            document.getElementById('address-text').textContent = data[0].address_name || '{{ detail.address }}';
+                        } else {
+                            statusEl.style.display = 'block';
+                            statusEl.innerHTML = `<strong style="font-size:16px;">⚠️ 위치를 찾을 수 없습니다</strong><br><span>검색어: ${searchKeyword}</span>`;
+                        }
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>

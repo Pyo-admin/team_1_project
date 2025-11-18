@@ -1,40 +1,100 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공연 정보 검색</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>공연 정보 검색</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    .genre-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .genre-buttons input[type="checkbox"] {
+      display: none;
+    }
+    .genre-buttons label {
+      padding: 8px 16px;
+      border: 2px solid #4caf50;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #4caf50;
+      user-select: none;
+      transition: all 0.3s;
+    }
+    .genre-buttons input[type="checkbox"]:checked + label {
+      background-color: #4caf50;
+      color: white;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+    }
+    .genre-buttons label:hover {
+      background-color: #71c671;
+      color: white;
+    }
+    .search-row {
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>공연 정보 검색</h1>
-        
-        <form action="/" method="get" class="search-box">
-            <label for="date">날짜 선택:</label>
-            <input type="date" id="date" name="date" value="{{ selected_date }}" required>
-            <button type="submit">검색</button>
-        </form>
+  <div class="container">
+    <h1>공연 정보 검색</h1>
+    <form action="/" method="get" class="search-box">
+      <div class="search-row">
+        <label for="date">날짜 선택:</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}" required />
+      </div>
+      <div class="search-row">
+        <span>장르 선택 (복수 선택 가능):</span>
+        <div class="genre-buttons">
+          <input type="checkbox" id="genreAAAA" name="genres" value="AAAA" {% if 'AAAA' in selected_genres %}checked{% endif %} />
+          <label for="genreAAAA">연극</label>
 
-        <div id="results">
-            {% if selected_date %}
-                {% if performances %}
-                    {% for perf in performances %}
-                    <div class="performance-item">
-                        <a href="/detail/{{ perf.id }}?date={{ selected_date }}">
-                            <img src="{{ perf.poster }}" alt="{{ perf.title }}">
-                            <div class="perf-info">
-                                <h3>{{ perf.title }}</h3>
-                                <p>{{ perf.place }}</p>
-                            </div>
-                        </a>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="no-results">해당 날짜에 공연이 없습니다.</p>
-                {% endif %}
-            {% endif %}
+          <input type="checkbox" id="genreBBBC" name="genres" value="BBBC" {% if 'BBBC' in selected_genres %}checked{% endif %} />
+          <label for="genreBBBC">뮤지컬</label>
+
+          <input type="checkbox" id="genreCCCA" name="genres" value="CCCA" {% if 'CCCA' in selected_genres %}checked{% endif %} />
+          <label for="genreCCCA">클래식</label>
+
+          <input type="checkbox" id="genreCCCC" name="genres" value="CCCC" {% if 'CCCC' in selected_genres %}checked{% endif %} />
+          <label for="genreCCCC">오페라</label>
+
+          <input type="checkbox" id="genreCCCD" name="genres" value="CCCD" {% if 'CCCD' in selected_genres %}checked{% endif %} />
+          <label for="genreCCCD">무용(발레)</label>
+
+          <input type="checkbox" id="genreEEEB" name="genres" value="EEEB" {% if 'EEEB' in selected_genres %}checked{% endif %} />
+          <label for="genreEEEB">국악</label>
+
+          <input type="checkbox" id="genreGGGA" name="genres" value="GGGA" {% if 'GGGA' in selected_genres %}checked{% endif %} />
+          <label for="genreGGGA">대중음악</label>
         </div>
+      </div>
+      <button type="submit">검색</button>
+    </form>
+
+    <div id="results">
+      {% if selected_date %}
+        {% if performances %}
+          {% for perf in performances %}
+            <div class="performance-item">
+              <a href="/detail/{{ perf.id }}?date={{ selected_date }}">
+                <img src="/proxy_image?url={{ perf.poster }}" alt="{{ perf.title }}" crossorigin="anonymous" />
+                <div class="perf-info">
+                  <h3>{{ perf.title }}</h3>
+                  <p>{{ perf.place }}</p>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="no-results">해당 조건에 맞는 공연이 없습니다.</p>
+        {% endif %}
+      {% endif %}
     </div>
+  </div>
 </body>
 </html>
+
