@@ -5,39 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>공연 정보 검색</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  <style>
-    .genre-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .genre-buttons input[type="checkbox"] {
-      display: none;
-    }
-    .genre-buttons label {
-      padding: 8px 16px;
-      border: 2px solid #4caf50;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-      color: #4caf50;
-      user-select: none;
-      transition: all 0.3s;
-    }
-    .genre-buttons input[type="checkbox"]:checked + label {
-      background-color: #4caf50;
-      color: white;
-      box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
-    }
-    .genre-buttons label:hover {
-      background-color: #71c671;
-      color: white;
-    }
-    .search-row {
-      margin-bottom: 15px;
-    }
-  </style>
 </head>
 <body>
   <div class="container">
@@ -97,4 +64,3 @@
   </div>
 </body>
 </html>
-
